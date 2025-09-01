@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
-import { getUserProjects, getPublicUser, getResumeUrl, getResumeDownloadUrl } from '@/lib/api';
+import { getUserProjects, getPublicUser, getResumeUrl, getResumeDownloadUrl, getProjectsWithReviewCounts } from '@/lib/api';
 import type { Project, User } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -30,8 +30,9 @@ export default function PortfolioPage() {
         const publicUser = await getPublicUser(usernameFromUrl);
         if (publicUser) {
            setUser(publicUser);
-           const projects = await getUserProjects(publicUser.id);
-           setUserProjects(projects);
+           const rawProjects = await getUserProjects(publicUser.id);
+           const projectsWithReviews = await getProjectsWithReviewCounts(rawProjects);
+           setUserProjects(projectsWithReviews);
         } else {
            setUser(null);
         }
@@ -61,12 +62,12 @@ export default function PortfolioPage() {
             </div>
           </aside>
           <main className="w-full md:w-2/3 lg:w-3/4">
-             <Skeleton className="h-24 w-full mb-8" />
              <h2 className="text-4xl font-bold mb-8 font-headline">Projects</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <Skeleton className="h-96 w-full" />
               <Skeleton className="h-96 w-full" />
             </div>
+            <Skeleton className="h-24 w-full" />
           </main>
         </div>
       </div>
@@ -168,8 +169,19 @@ export default function PortfolioPage() {
 
         <main className="w-full md:w-2/3 lg:w-3/4">
 
+          <h2 className="text-4xl font-bold mb-8 font-headline">Projects</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {userProjects.length > 0 ? (
+                userProjects.map((project) => (
+                    <ProjectCard key={project.$id} project={project} />
+                ))
+            ) : (
+                <p className="text-muted-foreground col-span-2">This user hasn't added any projects yet.</p>
+            )}
+          </div>
+
           {user.contribution && (
-            <Card className="mb-8 bg-gradient-to-br from-primary/10 to-transparent">
+            <Card className="bg-gradient-to-br from-primary/10 to-transparent">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-2xl font-headline">
                   <Sparkles className="text-primary"/>
@@ -181,17 +193,6 @@ export default function PortfolioPage() {
               </CardContent>
             </Card>
           )}
-
-          <h2 className="text-4xl font-bold mb-8 font-headline">Projects</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {userProjects.length > 0 ? (
-                userProjects.map((project) => (
-                    <ProjectCard key={project.$id} project={project} />
-                ))
-            ) : (
-                <p className="text-muted-foreground col-span-2">This user hasn't added any projects yet.</p>
-            )}
-          </div>
         </main>
       </div>
     </div>

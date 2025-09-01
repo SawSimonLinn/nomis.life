@@ -23,7 +23,7 @@ export const sendMessage = async (
         timestamp: new Date().toISOString(),
       },
       [
-        Permission.read(Role.user()),
+        Permission.read(Role.users()),
         Permission.update(Role.user(userId)),
         Permission.delete(Role.user(userId)),
       ]

@@ -40,4 +40,15 @@ export interface Project extends Models.Document {
   challenges: string;
   learnings: string;
   views: number;
+  reviewCount?: number;
+}
+
+export interface Review extends Models.Document {
+    projectId: string;
+    userId: string;
+    username: string;
+    avatar: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
 }

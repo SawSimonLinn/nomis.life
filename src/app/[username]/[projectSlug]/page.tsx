@@ -5,17 +5,18 @@ import { useState, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { getProjectBySlug, getUserProjects, getPublicUser } from '@/lib/api';
-import type { Project, User } from '@/lib/types';
+import { getProjectReviews } from '@/lib/reviews';
+import type { Project, User, Review } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Github, Link as LinkIcon, List, Zap, Target } from 'lucide-react';
+import { Github, Link as LinkIcon, List, Zap, Target, MessageSquare, Star } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import ReviewList from '@/components/reviews/review-list';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -25,7 +26,13 @@ export default function ProjectPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [creator, setCreator] = useState<User | null>(null);
   const [otherProjects, setOtherProjects] = useState<Project[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchProjectReviews = async (projectId: string) => {
+    const projectReviews = await getProjectReviews(projectId);
+    setReviews(projectReviews);
+  };
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -48,12 +55,16 @@ export default function ProjectPage() {
                     .slice(0, 2);
                 setOtherProjects(other);
             }
+
+            await fetchProjectReviews(fetchedProject.$id);
         }
       } catch (error) {
         console.error("Failed to fetch project data", error);
+        
         setProject(null);
       } finally {
         setLoading(false);
+        
       }
     };
 
@@ -93,7 +104,7 @@ export default function ProjectPage() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="flex flex-col lg:flex-row gap-12">
-        <main className="w-full lg:w-2/3">
+        <main className="w-full lg:w-2/3 space-y-8">
           <Card className="overflow-hidden">
              {project.imageUrls && project.imageUrls.length > 0 ? (
                 <Carousel className="w-full">
@@ -108,6 +119,7 @@ export default function ProjectPage() {
                             height={1080}
                             className="object-cover w-full h-full"
                             data-ai-hint="screenshot project"
+                            priority={index === 0}
                           />
                         </div>
                       </CarouselItem>
@@ -169,6 +181,22 @@ export default function ProjectPage() {
                 </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl font-headline flex items-center gap-2">
+                <MessageSquare/> Reviews & Feedback
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ReviewList 
+                    projectId={project.$id} 
+                    initialReviews={reviews} 
+                    onReviewChange={() => fetchProjectReviews(project.$id)}
+                />
+            </CardContent>
+          </Card>
+
         </main>
         
         <aside className="w-full lg:w-1/3">
@@ -212,7 +240,7 @@ export default function ProjectPage() {
                 <CardContent className="grid grid-cols-1 gap-4">
                   {otherProjects.map((p) => (
                      <Link key={p.$id} href={`/${p.user.username}/${p.slug}`} className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted">
-                        <Image src={p.imageUrls[0]} alt={p.title} width={80} height={60} className="rounded-md object-cover"/>
+                        <Image src={p.imageUrls[0]} alt={p.title} width={80} height={60} className="rounded-md object-cover w-[80px] h-[60px]"/>
                         <div>
                             <p className="font-semibold">{p.title}</p>
                             <p className="text-sm text-muted-foreground line-clamp-2">{p.description}</p>
