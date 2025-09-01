@@ -115,14 +115,18 @@ export default function ReviewList({ projectId, initialReviews, onReviewChange }
                             />
                         ) : (
                             <div className="flex items-start gap-4">
-                                <Avatar className="h-10 w-10 border">
-                                    <AvatarImage src={review.avatar} alt={review.username} />
-                                    <AvatarFallback>{review.username.charAt(0).toUpperCase()}</AvatarFallback>
-                                </Avatar>
+                                <Link href={`/${review.username}`}>
+                                    <Avatar className="h-10 w-10 border">
+                                        <AvatarImage src={review.avatar} alt={review.username} />
+                                        <AvatarFallback>{review.username.charAt(0).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                </Link>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
                                         <div className='flex items-center gap-2'>
-                                            <span className="text-sm font-semibold">{review.username}</span>
+                                            <Link href={`/${review.username}`}>
+                                                <span className="text-sm font-semibold hover:underline">{review.username}</span>
+                                            </Link>
                                             <span className="text-xs text-muted-foreground">
                                                 {formatDistanceToNow(new Date(review.$createdAt), { addSuffix: true })}
                                             </span>

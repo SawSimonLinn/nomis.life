@@ -24,6 +24,7 @@ import type { Models } from 'appwrite';
 import { Skeleton } from '../ui/skeleton';
 import { mapAppwriteUserToUser } from '@/lib/api';
 import type { User } from '@/lib/types';
+import { Github } from 'lucide-react';
 
 export function UserNav() {
   const [user, setUser] = useState<User | null>(null);
@@ -63,7 +64,11 @@ export function UserNav() {
   if (!user) {
     return (
       <Button asChild>
-        <Link href="/signin">Login with GitHub</Link>
+        <Link href="/signin">
+          <Github className="md:mr-2 h-4 w-4" />
+          <span className="hidden md:inline">Login with GitHub</span>
+          <span className="inline md:hidden">Login</span>
+        </Link>
       </Button>
     );
   }
