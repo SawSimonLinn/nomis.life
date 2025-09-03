@@ -17,6 +17,7 @@ export interface User {
   softSkills?: string[];
   contribution?: string;
   resumeFileId?: string;
+  careerPath?: string;
 }
 
 export interface Project extends Models.Document {
@@ -51,4 +52,24 @@ export interface Review extends Models.Document {
     rating: number;
     comment: string;
     createdAt: string;
+}
+
+export interface ChatMessage extends Models.Document {
+    roomId: string;
+    userId: string;
+    username: string;
+    message: string;
+}
+
+export type NotificationType = 'view' | 'review';
+
+export interface Notification extends Models.Document {
+  userId: string; // The ID of the user who should receive the notification
+  type: NotificationType;
+  actorName: string; // The username of the person who performed the action
+  message: string;
+  projectId: string;
+  projectSlug: string;
+  projectOwnerUsername: string;
+  isRead: boolean;
 }

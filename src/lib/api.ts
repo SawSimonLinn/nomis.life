@@ -1,4 +1,7 @@
 
+
+
+
 import { databases, storage, account } from './appwrite';
 import { ID, Query, Role, Permission } from 'appwrite';
 import type { Models } from 'appwrite';
@@ -10,6 +13,7 @@ const PROJECTS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_COLLECT
 const USERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!;
 const RESUME_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_RESUME_BUCKET_ID!;
 const CHATS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_CHATS_COLLECTION_ID!;
+const NOTIFICATIONS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_NOTIFICATIONS_COLlection_id!;
 
 
 // --- User Functions ---
@@ -78,6 +82,7 @@ export async function updateUserPreferences(prefs: Partial<User>) {
             contactEmail: updatedData.contactEmail,
             phoneNumber: updatedData.phoneNumber,
             resumeFileId: updatedData.resumeFileId,
+            careerPath: updatedData.careerPath,
         });
         
     } catch (error) {
@@ -113,6 +118,7 @@ export async function getPublicUser(username: string): Promise<User | null> {
                 contactEmail: userDoc.contactEmail,
                 phoneNumber: userDoc.phoneNumber,
                 resumeFileId: userDoc.resumeFileId,
+                careerPath: userDoc.careerPath,
             };
         }
         
@@ -147,6 +153,7 @@ export async function mapAppwriteUserToUser(appwriteUser: Models.User<Models.Pre
       contactEmail: prefs.contactEmail,
       phoneNumber: prefs.phoneNumber,
       resumeFileId: prefs.resumeFileId,
+      careerPath: prefs.careerPath,
     };
 
     try {
@@ -162,6 +169,7 @@ export async function mapAppwriteUserToUser(appwriteUser: Models.User<Models.Pre
             contactEmail: existingDoc.contactEmail || userData.contactEmail,
             phoneNumber: existingDoc.phoneNumber || userData.phoneNumber,
             resumeFileId: existingDoc.resumeFileId || userData.resumeFileId,
+            careerPath: existingDoc.careerPath || userData.careerPath || 'software_engineering',
             skills: existingDoc.skills && existingDoc.skills.length > 0 ? existingDoc.skills : userData.skills,
             softSkills: existingDoc.softSkills && existingDoc.softSkills.length > 0 ? existingDoc.softSkills : userData.softSkills,
             contribution: existingDoc.contribution || userData.contribution,
@@ -187,6 +195,7 @@ export async function mapAppwriteUserToUser(appwriteUser: Models.User<Models.Pre
                 contactEmail: userData.contactEmail,
                 phoneNumber: userData.phoneNumber,
                 resumeFileId: userData.resumeFileId,
+                careerPath: userData.careerPath || 'software_engineering',
              };
              await databases.createDocument(
                 DB_ID,
@@ -206,8 +215,48 @@ export async function mapAppwriteUserToUser(appwriteUser: Models.User<Models.Pre
     return userData;
 }
 
+export async function getAllUsersExceptMe(): Promise<User[]> {
+    try {
+        const currentUser = await getAppwriteUser();
+        if (!currentUser) return [];
+
+        const response = await databases.listDocuments(
+            DB_ID,
+            USERS_COLLECTION_ID,
+            [Query.notEqual('$id', currentUser.$id)]
+        );
+
+        return response.documents as unknown as User[];
+    } catch (error) {
+        console.error('Failed to fetch users', error);
+        return [];
+    }
+}
+
 
 // --- Project Functions ---
+
+export async function getProjectById(projectId: string): Promise<Project | null> {
+    try {
+        const doc = await databases.getDocument(DB_ID, PROJECTS_COLLECTION_ID, projectId);
+        const project = doc as unknown as Project;
+
+        // Manually fetch and attach the user object.
+        const userDoc = await databases.getDocument(DB_ID, USERS_COLLECTION_ID, project.userId);
+        project.user = {
+            id: userDoc.$id,
+            name: userDoc.name,
+            username: userDoc.username,
+            avatarUrl: userDoc.avatarUrl,
+        };
+
+        return project;
+    } catch (error) {
+        console.error(`Failed to fetch project by ID ${projectId}:`, error);
+        return null;
+    }
+}
+
 
 async function getProjects(queries: string[] = []): Promise<Project[]> {
     try {
@@ -336,18 +385,15 @@ export async function getAllProjects(searchQuery: string = ''): Promise<Project[
     }
     
     try {
-        const searchTerms = searchQuery.split(' ').filter(term => term.length > 0).map(term => term.toLowerCase());
+        const searchTerms = searchQuery.split(' ').filter(term => term.length > 0);
         
         const titleQueries = searchTerms.map(term => Query.search('title', term));
         const developerNameQueries = searchTerms.map(term => Query.search('developerName', term));
-        const techStackQueries = searchTerms.map(term => Query.search('techStack', term));
-
 
         const queries = [
             Query.or([
                 ...titleQueries,
                 ...developerNameQueries,
-                ...techStackQueries
             ]),
             Query.orderDesc('views'),
         ];
@@ -410,11 +456,18 @@ export async function deleteProject(projectId: string) {
 export async function uploadImage(file: File): Promise<Models.File> {
     const storageBucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ID!;
     try {
+        const user = await getAppwriteUser();
+        if (!user) throw new Error('User not authenticated for image upload');
+        
         return await storage.createFile(
             storageBucketId,
             ID.unique(),
             file,
-            [Permission.read(Role.any())]
+            [
+                Permission.read(Role.any()),
+                Permission.update(Role.user(user.$id)),
+                Permission.delete(Role.user(user.$id)),
+            ]
         );
     } catch (error) {
         console.error('Failed to upload image', error);

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,7 +25,7 @@ import type { Models } from 'appwrite';
 import { Skeleton } from '../ui/skeleton';
 import { mapAppwriteUserToUser } from '@/lib/api';
 import type { User } from '@/lib/types';
-import { Github } from 'lucide-react';
+import { Github, MessageSquare } from 'lucide-react';
 
 export function UserNav() {
   const [user, setUser] = useState<User | null>(null);
@@ -99,6 +100,9 @@ export function UserNav() {
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={`/${user.username}`}>Public Profile</Link>
+          </DropdownMenuItem>
+           <DropdownMenuItem asChild>
+             <Link href="/community-chat">Community Chat</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

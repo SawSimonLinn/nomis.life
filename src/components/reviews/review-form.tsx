@@ -98,6 +98,16 @@ export default function ReviewForm({ projectId, user, review, onSuccess, onCance
       onSuccess();
     } catch (error: any) {
       console.error('Review submit error:', error.message || error);
+  
+      if (error.message === 'You cannot review your own project.') {
+        toast({
+          variant: 'destructive',
+          title: 'Oops!',
+          description: 'You can’t review your own project.',
+        });
+        return;
+      }
+  
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -105,6 +115,7 @@ export default function ReviewForm({ projectId, user, review, onSuccess, onCance
       });
     }
   };
+  
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

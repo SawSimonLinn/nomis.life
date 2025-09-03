@@ -13,6 +13,7 @@ import {z} from 'genkit';
 
 const GenerateProjectDetailsInputSchema = z.object({
   description: z.string().min(10).describe('The description of the project.'),
+  careerPath: z.string().optional().describe("The user's selected career path (e.g., 'Software Engineering')."),
 });
 export type GenerateProjectDetailsInput = z.infer<typeof GenerateProjectDetailsInputSchema>;
 
@@ -39,7 +40,13 @@ const prompt = ai.definePrompt({
   name: 'generateProjectDetailsPrompt',
   input: {schema: GenerateProjectDetailsInputSchema},
   output: {schema: GenerateProjectDetailsOutputSchema},
-  prompt: `You are an expert project manager and software developer. Based on the following project description, please generate a list of likely features, a summary of potential challenges, and a summary of the key learnings.
+  prompt: `You are an expert project manager and software developer. A user is creating a portfolio piece.
+Based on the following project description, please generate a list of likely features, a summary of potential challenges, and a summary of the key learnings.
+
+{{#if careerPath}}
+IMPORTANT: Tailor your response to someone with a career path in "{{careerPath}}". Frame the challenges and learnings from their perspective.
+For example, for a UI/UX designer, focus on design challenges. For a Data Scientist, focus on data-related challenges.
+{{/if}}
 
 Project Description:
 {{{description}}}

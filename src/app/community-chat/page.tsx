@@ -14,61 +14,68 @@ import { MessagesSquare } from 'lucide-react';
 const COMMUNITY_ROOM_ID = 'general-community-chat';
 
 export default function CommunityChatPage() {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchCurrentUser = async () => {
-            setLoading(true);
-            try {
-                const appwriteUser = await getAppwriteUser();
-                if (appwriteUser) {
-                    const mappedUser = await mapAppwriteUserToUser(appwriteUser);
-                    setCurrentUser(mappedUser);
-                }
-            } catch (error) {
-                console.error("Failed to fetch current user", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        setLoading(true);
+        const appwriteUser = await getAppwriteUser();
+        if (appwriteUser) {
+          const mappedUser = await mapAppwriteUserToUser(appwriteUser);
+          setCurrentUser(mappedUser);
+        }
+      } catch (error) {
+        console.error("Failed to fetch current user", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        fetchCurrentUser();
-    }, []);
+    fetchCurrentUser();
+  }, []);
 
-    return (
-        <div className="container mx-auto px-4 py-8 md:py-12 flex-grow flex flex-col">
-           <div className="max-w-4xl mx-auto w-full flex-grow flex flex-col">
-             <Card className="flex-grow flex flex-col">
-                <CardHeader>
-                    <CardTitle className="text-3xl font-headline flex items-center gap-3">
-                        <MessagesSquare className="h-8 w-8 text-primary" />
-                        Community Live Chat
-                    </CardTitle>
-                    <CardDescription>
-                        Welcome! This is a shared space for all users to connect and chat in real-time.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow flex flex-col">
-                    <div className="flex-grow mb-4">
-                        <ChatRoom roomId={COMMUNITY_ROOM_ID} />
-                    </div>
-                    {loading ? (
-                        <Skeleton className="h-10 w-full" />
-                    ) : currentUser ? (
-                        <MessageInput 
-                            roomId={COMMUNITY_ROOM_ID} 
-                            userId={currentUser.id} 
-                            username={currentUser.username} 
-                        />
-                    ) : (
-                        <div className="text-center text-sm text-muted-foreground pt-4">
-                            <Link href="/signin" className="text-primary underline">Sign in</Link> to join the conversation.
-                        </div>
-                    )}
-                </CardContent>
-             </Card>
-           </div>
-        </div>
-    );
+  return (
+    <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col flex-grow">
+      <div className="max-w-4xl mx-auto w-full flex flex-col flex-grow">
+        <Card className="flex flex-col flex-grow h-full">
+          <CardHeader className="border-b">
+            <CardTitle className="text-3xl font-headline flex items-center gap-3">
+              <MessagesSquare className="h-7 w-7 text-primary" />
+              Community Live Chat
+            </CardTitle>
+            <CardDescription>
+              Welcome! This is a shared space for all users to connect and chat in real-time.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="flex flex-col flex-grow space-y-4 overflow-hidden p-4">
+            <div className="flex-grow overflow-hidden">
+              <ChatRoom roomId={COMMUNITY_ROOM_ID} currentUserId={currentUser?.id} />
+            </div>
+
+            <div className="pt-2">
+              {loading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : currentUser ? (
+                <MessageInput
+                  roomId={COMMUNITY_ROOM_ID}
+                  userId={currentUser.id}
+                  username={currentUser.username}
+                />
+              ) : (
+                <div className="text-center text-sm text-muted-foreground">
+                  <Link href="/signin" className="text-primary underline">
+                    Sign in
+                  </Link>{' '}
+                  to join the conversation.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }

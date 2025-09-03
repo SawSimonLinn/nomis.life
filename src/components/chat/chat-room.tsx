@@ -1,15 +1,21 @@
 
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { client, databases, Query } from '@/lib/appwrite';
-import type { Models } from 'appwrite';
+import { useState, useEffect, useRef } from 'react';
+import { getMessages, subscribeToRoom, ChatMessage } from '@/lib/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-export function ChatRoom({ roomId }: { roomId: string }) {
-  const [messages, setMessages] = useState<Models.Document[]>([]);
+interface ChatRoomProps {
+  roomId: string;
+  currentUserId?: string;
+}
+
+export function ChatRoom({ roomId, currentUserId }: ChatRoomProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -17,93 +23,100 @@ export function ChatRoom({ roomId }: { roomId: string }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(scrollToBottom, [messages]);
-
   useEffect(() => {
-    const loadMessages = async () => {
+    const fetchMessages = async () => {
       setLoading(true);
-      try {
-        const res = await databases.listDocuments(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          process.env.NEXT_PUBLIC_APPWRITE_CHATS_COLLECTION_ID!,
-          [Query.equal('roomId', roomId), Query.orderAsc('timestamp'), Query.limit(50)]
-        );
-        console.log('Loaded messages:', res.documents);
-        setMessages(res.documents);
-      } catch (error) {
-        console.error("Failed to load messages", error);
-      } finally {
-        setLoading(false);
-      }
+      const initialMessages = await getMessages(roomId);
+      setMessages(initialMessages);
+      setLoading(false);
     };
 
-    loadMessages();
+    fetchMessages();
 
-    const unsubscribe = client.subscribe(
-      `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!}.collections.${process.env.NEXT_PUBLIC_APPWRITE_CHATS_COLLECTION_ID!}.documents`,
-      (response) => {
-        const newMessage = response.payload as Models.Document;
-        if (newMessage.roomId === roomId) {
-          // Avoid adding duplicates from the subscription event
-          setMessages((prev) => {
-            if (prev.find((m) => m.$id === newMessage.$id)) {
-              return prev;
-            }
-            return [...prev, newMessage];
-          });
-        }
-      }
-    );
+    const handleNewMessage = (newMessage: ChatMessage) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    };
 
-    return () => unsubscribe();
+    const unsubscribe = subscribeToRoom(roomId, handleNewMessage);
+
+    return () => {
+      unsubscribe();
+    };
   }, [roomId]);
-  
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   if (loading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex items-start gap-2.5">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <div className="flex-1 space-y-1">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-6 w-40" />
-            </div>
-          </div>
-        ))}
+        <Skeleton className="h-12 w-3/4" />
+        <Skeleton className="h-12 w-1/2 ml-auto" />
+        <Skeleton className="h-12 w-2/3" />
       </div>
     );
   }
 
-
   return (
-    <div className="h-full overflow-y-auto space-y-4 pr-4">
+    <div className="space-y-4 h-[50vh] overflow-y-auto w-full px-2">
       {messages.length === 0 ? (
-         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-            <p className="font-semibold">No messages yet!</p>
-            <p className="text-sm">Be the first to start the conversation.</p>
+        <div className="text-center text-muted-foreground">
+          No messages yet. Be the first to say something!
         </div>
       ) : (
-         messages.map((msg) => (
-            <div key={msg.$id} className="flex items-start gap-2.5">
-               <Avatar className="w-8 h-8 border">
-                 <AvatarImage src={`https://github.com/${msg.username}.png`} alt={msg.username}/>
-                 <AvatarFallback>{msg.username.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col gap-1 w-full">
-                 <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <span className="text-sm font-semibold text-foreground">{msg.username}</span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                        {formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
-                    </span>
-                 </div>
-                 <div className="leading-snug p-2 bg-muted rounded-lg">
-                    <p className="text-sm font-normal text-foreground/90">{msg.message}</p>
-                 </div>
+        messages.map((msg) => {
+          const isCurrentUser = msg.userId === currentUserId;
+          return (
+            <div
+              key={msg.$id}
+              className={cn(
+                'flex items-start gap-3 animate-fade-in-up',
+                isCurrentUser && 'justify-end flex-row-reverse'
+              )}
+            >
+              <Link href={`/${msg.username}`}>
+                <Avatar className="h-8 w-8 border">
+                   <AvatarImage src={`https://github.com/${msg.username}.png`} alt={msg.username} />
+                  <AvatarFallback>
+                    {msg.username?.charAt(0).toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <div className={cn('flex-1 min-w-0', isCurrentUser && 'text-right')}>
+                <div
+                  className={cn(
+                    'flex items-center gap-2',
+                    isCurrentUser && 'flex-row-reverse'
+                  )}
+                >
+                  <Link href={`/${msg.username}`}>
+                    <p className="text-sm font-semibold hover:underline">
+                      {msg.username}
+                    </p>
+                  </Link>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(msg.$createdAt), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                </div>
+                <div
+                  className={cn(
+                    'mt-1 inline-block text-sm p-2 rounded-lg break-words whitespace-pre-wrap max-w-full',
+                    isCurrentUser
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground/90 text-left'
+                  )}
+                >
+                  {msg.message}
+                </div>
               </div>
             </div>
-          ))
+          );
+        })
       )}
-       <div ref={messagesEndRef} />
+      <div ref={messagesEndRef} />
     </div>
   );
 }

@@ -4,13 +4,14 @@
 import { useState, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { getProjectBySlug, getUserProjects, getPublicUser } from '@/lib/api';
+import { getProjectBySlug, getUserProjects, getPublicUser, getAppwriteUser, mapAppwriteUserToUser } from '@/lib/api';
 import { getProjectReviews } from '@/lib/reviews';
+import { notifyProjectView } from '@/lib/notifications';
 import type { Project, User, Review } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Github, Link as LinkIcon, List, Zap, Target, MessageSquare, Star } from 'lucide-react';
+import { Github, Link as LinkIcon, List, Zap, Target, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -28,6 +29,22 @@ export default function ProjectPage() {
   const [otherProjects, setOtherProjects] = useState<Project[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const appwriteUser = await getAppwriteUser();
+        if (appwriteUser) {
+          const mappedUser = await mapAppwriteUserToUser(appwriteUser);
+          setCurrentUser(mappedUser);
+        }
+      } catch (error) {
+        // Not logged in
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   const fetchProjectReviews = async (projectId: string) => {
     const projectReviews = await getProjectReviews(projectId);
@@ -70,6 +87,19 @@ export default function ProjectPage() {
 
     fetchProjectData();
   }, [projectSlug, username]);
+
+  useEffect(() => {
+    if (!project || !currentUser) return;
+    if (project.userId === currentUser.id) return;
+  
+    notifyProjectView({
+      viewerName: currentUser.username,
+      projectId: project.$id,
+      ownerId: project.userId,
+    });
+  }, [project, currentUser]);
+  
+
 
   if (loading) {
     return (

@@ -246,7 +246,10 @@ export default function ProjectForm({ project, onSubmitSuccess, user }: ProjectF
     }
      setIsGeneratingDetails(true);
     try {
-      const result = await generateProjectDetails({ description: descriptionValue });
+      const result = await generateProjectDetails({ 
+        description: descriptionValue,
+        careerPath: mappedUser?.careerPath
+      });
       if (result) {
         if(result.features) form.setValue('features', result.features.join(', '));
         if(result.challenges) form.setValue('challenges', result.challenges);
@@ -389,7 +392,7 @@ export default function ProjectForm({ project, onSubmitSuccess, user }: ProjectF
                     <div>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg, image/png"
                         multiple
                         ref={fileInputRef}
                         onChange={handleImageChange}
@@ -401,7 +404,7 @@ export default function ProjectForm({ project, onSubmitSuccess, user }: ProjectF
                       </Button>
                     </div>
                   </FormControl>
-                  <FormDescription>Upload one or more images. Drag to reorder.</FormDescription>
+                  <FormDescription>Upload one or more images (JPG, PNG). Drag to reorder.</FormDescription>
                    {imagePreviews.length > 0 && (
                     <div className="grid grid-cols-3 gap-4 mt-4">
                       {imagePreviews.map((src, index) => (
@@ -554,5 +557,7 @@ export default function ProjectForm({ project, onSubmitSuccess, user }: ProjectF
     </Form>
   );
 }
+
+    
 
     

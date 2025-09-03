@@ -1,9 +1,8 @@
 import Link from 'next/link';
-import { Code2, MessagesSquare } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 import { UserNav } from '@/components/auth/user-nav';
 import { ModeToggle } from '@/components/mode-toggle';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import Notifications from './notifications';
 
 export default function Header() {
   return (
@@ -18,17 +17,8 @@ export default function Header() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
-           <Link
-              href="/community-chat"
-              className={cn(
-                buttonVariants({ variant: 'ghost' }),
-                'hidden sm:flex'
-              )}
-            >
-              <MessagesSquare className="mr-2 h-4 w-4" />
-              Community
-            </Link>
           <ModeToggle />
+          <Notifications />
           <nav className="flex items-center">
             <UserNav />
           </nav>

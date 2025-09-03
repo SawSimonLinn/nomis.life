@@ -13,13 +13,24 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/lib/types';
-import { SKILLS_LIST, SOFT_SKILLS_LIST } from '@/lib/constants';
+import { SKILLS_LIST, SOFT_SKILLS_LIST, CAREER_SKILLS } from '@/lib/constants';
 import { updateUserPreferences, uploadResume, deleteResume, getResumeUrl } from '@/lib/api';
 import { generateContribution } from '@/ai/flows/contribution-generation';
-import { Loader2, Wand2, FileText, Trash2, UploadCloud } from 'lucide-react';
+import { Loader2, Wand2, FileText, Trash2, UploadCloud, Briefcase } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
+const CAREER_PATHS = {
+    software_engineering: 'Software Engineering',
+    data_science: 'Data Science',
+    qa_engineering: 'QA Engineering',
+    cyber_security: 'Cybersecurity',
+    ui_ux: 'UI/UX Design',
+    product_management: 'Product Management',
+    devops: 'DevOps / Cloud',
+};
 
 const profileFormSchema = z.object({
+  careerPath: z.string().optional(),
   linkedinUrl: z.string().url().optional().or(z.literal('')),
   portfolioUrl: z.string().url().optional().or(z.literal('')),
   contactEmail: z.string().email().optional().or(z.literal('')),
@@ -63,6 +74,7 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
       contactEmail: user.contactEmail || '',
       phoneNumber: user.phoneNumber || '',
       resumeFileId: user.resumeFileId || '',
+      careerPath: user.careerPath || '',
     },
   });
   
@@ -76,11 +88,15 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
       contactEmail: user.contactEmail || '',
       phoneNumber: user.phoneNumber || '',
       resumeFileId: user.resumeFileId || '',
+      careerPath: user.careerPath || '',
     });
   }, [user, form]);
 
   const selectedSoftSkillsCount = form.watch('softSkills')?.length || 0;
   const contributionValue = form.watch('contribution');
+  const careerPath = form.watch('careerPath');
+
+  const relevantSkills = careerPath ? CAREER_SKILLS[careerPath] : SKILLS_LIST;
 
   async function onSubmit(data: ProfileFormData) {
     try {
@@ -166,6 +182,38 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+
+         <Card>
+            <CardHeader>
+                <CardTitle>Career Goal</CardTitle>
+                <CardDescription>Select your target career path. This helps tailor your experience and skill selection.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <FormField
+                    control={form.control}
+                    name="careerPath"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Career Path</FormLabel>
+                         <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select your career path..." />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {Object.entries(CAREER_PATHS).map(([key, value]) => (
+                                    <SelectItem key={key} value={key}>{value}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </CardContent>
+        </Card>
+
          <Card>
           <CardHeader>
             <CardTitle>Contact Information</CardTitle>
@@ -283,16 +331,16 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
         <Card>
           <CardHeader>
             <CardTitle>Hard Skills</CardTitle>
-            <CardDescription>Select the technical skills you want to showcase on your profile.</CardDescription>
+            <CardDescription>Select the technical skills you want to showcase on your profile. The list changes based on your career path.</CardDescription>
           </CardHeader>
           <CardContent>
             <FormField
               control={form.control}
               name="skills"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {SKILLS_LIST.map((item) => (
+                    {relevantSkills.map((item) => (
                       <FormField
                         key={item}
                         control={form.control}

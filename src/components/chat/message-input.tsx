@@ -25,7 +25,12 @@ export function MessageInput({ roomId, userId, username }: MessageInputProps) {
 
     setIsSending(true);
     try {
-      await sendMessage(roomId, userId, username, message);
+      await sendMessage({
+        roomId: roomId, 
+        userId: userId, 
+        username: username, 
+        message: message,
+      });
       setMessage('');
     } catch (error) {
       toast({

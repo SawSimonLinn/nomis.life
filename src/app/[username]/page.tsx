@@ -3,16 +3,25 @@
 
 import { useState, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
-import { getUserProjects, getPublicUser, getResumeUrl, getResumeDownloadUrl, getProjectsWithReviewCounts } from '@/lib/api';
+import { getUserProjects, getPublicUser, getResumeDownloadUrl, getProjectsWithReviewCounts } from '@/lib/api';
 import type { Project, User } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProjectCard from '@/components/project-card';
-import { Github, Linkedin, Mail, Sparkles, Phone, Globe, Download, Eye } from 'lucide-react';
+import { Github, Linkedin, Mail, Sparkles, Phone, Globe, Download, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+const CAREER_PATHS: { [key: string]: string } = {
+    software_engineering: 'Software Engineering',
+    data_science: 'Data Science',
+    qa_engineering: 'QA Engineering',
+    cyber_security: 'Cybersecurity',
+    ui_ux: 'UI/UX Design',
+    product_management: 'Product Management',
+    devops: 'DevOps / Cloud',
+};
 
 export default function PortfolioPage() {
   const params = useParams();
@@ -89,6 +98,12 @@ export default function PortfolioPage() {
             </Avatar>
             <h1 className="text-3xl font-bold font-headline">{user.name}</h1>
             <p className="text-lg text-muted-foreground">@{user.username}</p>
+             {user.careerPath && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                    <Briefcase className="w-4 h-4"/>
+                    <span>{CAREER_PATHS[user.careerPath]}</span>
+                </div>
+            )}
             <p className="text-foreground/80 my-4">{user.bio}</p>
             
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
@@ -129,13 +144,8 @@ export default function PortfolioPage() {
              {user.resumeFileId && (
                 <div className="flex flex-col sm:flex-row gap-2 w-full mb-6">
                     <Button asChild className="w-full">
-                        <a href={getResumeUrl(user.resumeFileId)} target="_blank" rel="noopener noreferrer">
-                            <Eye/> View Resume
-                        </a>
-                    </Button>
-                    <Button asChild variant="secondary" className="w-full">
                         <a href={getResumeDownloadUrl(user.resumeFileId)} download>
-                            <Download/> Download
+                            <Download/> Download Resume
                         </a>
                     </Button>
                 </div>
