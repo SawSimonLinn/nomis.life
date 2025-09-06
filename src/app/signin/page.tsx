@@ -15,8 +15,10 @@ const handleGitHubLogin = async () => {
   try {
     account.createOAuth2Session(
       "github" as any,
-      `${window.location.origin}/dashboard`,
-      `${window.location.origin}/signin`
+      // `${window.location.origin}/dashboard`,
+      `${window.location.origin}/auth/callback`,
+      `${window.location.origin}/auth/login`
+      // `${window.location.origin}/signin`
     );
   } catch (error) {
     console.error("GitHub login error:", error);

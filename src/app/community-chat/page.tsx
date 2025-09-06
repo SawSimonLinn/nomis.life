@@ -1,17 +1,22 @@
+"use client";
 
-'use client';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import type { User } from "@/lib/types";
+import { getAppwriteUser, mapAppwriteUserToUser } from "@/lib/api";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChatRoom } from "@/components/chat/chat-room";
+import { MessageInput } from "@/components/chat/message-input";
+import { MessagesSquare } from "lucide-react";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import type { User } from '@/lib/types';
-import { getAppwriteUser, mapAppwriteUserToUser } from '@/lib/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ChatRoom } from '@/components/chat/chat-room';
-import { MessageInput } from '@/components/chat/message-input';
-import { MessagesSquare } from 'lucide-react';
-
-const COMMUNITY_ROOM_ID = 'general-community-chat';
+const COMMUNITY_ROOM_ID = "general-community-chat";
 
 export default function CommunityChatPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -46,13 +51,17 @@ export default function CommunityChatPage() {
               Community Live Chat
             </CardTitle>
             <CardDescription>
-              Welcome! This is a shared space for all users to connect and chat in real-time.
+              Welcome! This is a shared space for all users to connect and chat
+              in real-time.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="flex flex-col flex-grow space-y-4 overflow-hidden p-4">
             <div className="flex-grow overflow-hidden">
-              <ChatRoom roomId={COMMUNITY_ROOM_ID} currentUserId={currentUser?.id} />
+              <ChatRoom
+                roomId={COMMUNITY_ROOM_ID}
+                currentUserId={currentUser?.id}
+              />
             </div>
 
             <div className="pt-2">
@@ -66,9 +75,9 @@ export default function CommunityChatPage() {
                 />
               ) : (
                 <div className="text-center text-sm text-muted-foreground">
-                  <Link href="/signin" className="text-primary underline">
+                  <Link href="/auth/login" className="text-primary underline">
                     Sign in
-                  </Link>{' '}
+                  </Link>{" "}
                   to join the conversation.
                 </div>
               )}

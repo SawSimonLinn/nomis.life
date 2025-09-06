@@ -1,16 +1,10 @@
+"use client";
 
-
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,13 +13,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { account } from '@/lib/appwrite';
-import type { Models } from 'appwrite';
-import { Skeleton } from '../ui/skeleton';
-import { mapAppwriteUserToUser } from '@/lib/api';
-import type { User } from '@/lib/types';
-import { Github, MessageSquare } from 'lucide-react';
+} from "@/components/ui/dropdown-menu";
+import { account } from "@/lib/appwrite";
+import type { Models } from "appwrite";
+import { Skeleton } from "../ui/skeleton";
+import { mapAppwriteUserToUser } from "@/lib/api";
+import type { User } from "@/lib/types";
+import { Github, MessageSquare } from "lucide-react";
 
 export function UserNav() {
   const [user, setUser] = useState<User | null>(null);
@@ -50,14 +44,14 @@ export function UserNav() {
 
   const handleSignOut = async () => {
     try {
-      await account.deleteSession('current');
+      await account.deleteSession("current");
       setUser(null);
-      router.push('/');
+      router.push("/");
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
     }
   };
-  
+
   if (loading) {
     return <Skeleton className="h-9 w-24" />;
   }
@@ -65,7 +59,7 @@ export function UserNav() {
   if (!user) {
     return (
       <Button asChild>
-        <Link href="/signin">
+        <Link href="/auth/login">
           <Github className="md:mr-2 h-4 w-4" />
           <span className="hidden md:inline">Login with GitHub</span>
           <span className="inline md:hidden">Login</span>
@@ -101,14 +95,12 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href={`/${user.username}`}>Public Profile</Link>
           </DropdownMenuItem>
-           <DropdownMenuItem asChild>
-             <Link href="/community-chat">Community Chat</Link>
+          <DropdownMenuItem asChild>
+            <Link href="/community-chat">Community Chat</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          Sign out
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
