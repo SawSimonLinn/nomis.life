@@ -40,15 +40,15 @@
 
 <table align="center">
   <tr>
-    <td colspan="2"><img src="./public/01.PNG" width="100%"/></td>
+    <td colspan="2"><img src="./public/01.png" width="100%"/></td>
   </tr>
   <tr>
-    <td><img src="./public/02.PNG" width="100%"/></td>
-    <td><img src="./public/03.PNG" width="100%"/></td>
+    <td><img src="./public/02.png" width="100%"/></td>
+    <td><img src="./public/03.png" width="100%"/></td>
   </tr>
   <tr>
-    <td><img src="./public/05.PNG" width="100%"/></td>
-    <td><img src="./public/04.PNG" width="100%"/></td>
+    <td><img src="./public/05.png" width="100%"/></td>
+    <td><img src="./public/04.png" width="100%"/></td>
   </tr>
 </table>
 
