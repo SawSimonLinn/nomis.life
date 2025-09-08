@@ -90,6 +90,7 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
   });
   
   useEffect(() => {
+    // Only reset if the user ID changes. This prevents resetting on every re-render.
     form.reset({
       bio: user.bio || '',
       skills: user.skills || [],
@@ -102,8 +103,8 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
       resumeFileId: user.resumeFileId || '',
       careerPath: user.careerPath || '',
     });
-    setAvatarPreview(null);
-  }, [user, form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
 
   const selectedSoftSkillsCount = form.watch('softSkills')?.length || 0;
   const contributionValue = form.watch('contribution');
@@ -150,6 +151,8 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
             description: "Your profile details have been successfully updated.",
         });
         onProfileUpdate();
+        setAvatarPreview(null);
+        form.setValue('newAvatar', undefined);
     } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -237,9 +240,15 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
         />
         
         <Card>
-            <CardHeader>
-                <CardTitle>Public Profile</CardTitle>
-                <CardDescription>This information will be displayed on your public portfolio page.</CardDescription>
+            <CardHeader className="flex flex-row justify-between items-center">
+                <div>
+                  <CardTitle>Public Profile</CardTitle>
+                  <CardDescription>This information will be displayed on your public portfolio page.</CardDescription>
+                </div>
+                 <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting && <Loader2 className="animate-spin mr-2" />}
+                    {form.formState.isSubmitting ? 'Saving...' : 'Save All Changes'}
+                </Button>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex items-center gap-6">
@@ -257,7 +266,7 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
                                             onChange={handleAvatarChange}
                                             className="hidden"
                                         />
-                                        <Avatar className="h-24 w-24 cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                                        <Avatar className="h-24 w-24 cursor-pointer">
                                             <AvatarImage src={avatarPreview || user.avatarUrl} alt={user.name} className="object-cover" />
                                             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
@@ -295,36 +304,87 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
             </CardContent>
         </Card>
 
-         <Card>
-            <CardHeader>
-                <CardTitle>Career Goal</CardTitle>
-                <CardDescription>Select your target career path. This helps tailor your experience and skill selection.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <FormField
-                    control={form.control}
-                    name="careerPath"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Career Path</FormLabel>
-                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select your career path..." />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                {Object.entries(CAREER_PATHS).map(([key, value]) => (
-                                    <SelectItem key={key} value={key}>{value}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Career Goal</CardTitle>
+                    <CardDescription>Select your target career path.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <FormField
+                        control={form.control}
+                        name="careerPath"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Career Path</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Select your career path..." />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {Object.entries(CAREER_PATHS).map(([key, value]) => (
+                                        <SelectItem key={key} value={key}>{value}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Resume</CardTitle>
+                    <CardDescription>Upload a PDF for others to download.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <FormField
+                        control={form.control}
+                        name="newResume"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Resume PDF</FormLabel>
+                                {user.resumeFileId ? (
+                                    <div className="flex items-center gap-4">
+                                        <a href={getResumeUrl(user.resumeFileId)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-2">
+                                            <FileText />
+                                            View Current
+                                        </a>
+                                        <Button type="button" variant="outline" size="sm" onClick={() => resumeInputRef.current?.click()}>Change</Button>
+                                        <Button type="button" variant="destructive" size="sm" onClick={handleRemoveResume}>Remove</Button>
+                                    </div>
+                                ) : (
+                                    <FormControl>
+                                        <Button type="button" variant="outline" onClick={() => resumeInputRef.current?.click()}>
+                                            <UploadCloud className="mr-2"/>
+                                            Upload PDF
+                                        </Button>
+                                    </FormControl>
+                                )}
+                                <input 
+                                    type="file"
+                                    accept=".pdf"
+                                    ref={resumeInputRef}
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if(file) {
+                                            field.onChange(file)
+                                            toast({title: "File selected", description: `${file.name}. Click "Save All Changes" to upload.`})
+                                        }
+                                    }}
+                                />
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </CardContent>
+            </Card>
+        </div>
+
 
          <Card>
           <CardHeader>
@@ -389,55 +449,6 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
                 />
             </div>
           </CardContent>
-        </Card>
-
-         <Card>
-            <CardHeader>
-                <CardTitle>Resume</CardTitle>
-                <CardDescription>Upload your resume as a PDF. This will be visible on your public profile.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <FormField
-                    control={form.control}
-                    name="newResume"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Resume PDF</FormLabel>
-                            {user.resumeFileId ? (
-                                <div className="flex items-center gap-4">
-                                    <a href={getResumeUrl(user.resumeFileId)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-2">
-                                        <FileText />
-                                        View Current Resume
-                                    </a>
-                                    <Button type="button" variant="outline" size="sm" onClick={() => resumeInputRef.current?.click()}>Change</Button>
-                                    <Button type="button" variant="destructive" size="sm" onClick={handleRemoveResume}>Remove</Button>
-                                </div>
-                            ) : (
-                                <FormControl>
-                                    <Button type="button" variant="outline" onClick={() => resumeInputRef.current?.click()}>
-                                        <UploadCloud />
-                                        Upload PDF
-                                    </Button>
-                                </FormControl>
-                            )}
-                             <input 
-                                type="file"
-                                accept=".pdf"
-                                ref={resumeInputRef}
-                                className="hidden"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if(file) {
-                                        field.onChange(file)
-                                        toast({title: "File selected", description: `${file.name}. Click "Save All Changes" to upload.`})
-                                    }
-                                }}
-                             />
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </CardContent>
         </Card>
 
         <Card>
@@ -571,4 +582,5 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
       </form>
     </Form>
   );
-}
+
+    

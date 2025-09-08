@@ -79,7 +79,7 @@ export function ImageCropper({
           unit: '%',
           width: 90,
         },
-        1,
+        1, // aspect ratio 1:1
         width,
         height
       ),
@@ -137,7 +137,7 @@ export function ImageCropper({
                 alt="Crop preview"
                 src={imageSrc}
                 onLoad={onImageLoad}
-                className="max-h-[60vh] w-auto"
+                style={{ maxHeight: '60vh', width: 'auto' }}
               />
             </ReactCrop>
           )}

@@ -167,7 +167,7 @@ export default function DashboardPage() {
       <DashboardStats projects={projects} />
       
       <Tabs defaultValue="projects" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto">
           <TabsTrigger value="projects">My Projects</TabsTrigger>
           <TabsTrigger value="profile">My Profile</TabsTrigger>
         </TabsList>
