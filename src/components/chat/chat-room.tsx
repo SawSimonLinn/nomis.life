@@ -104,7 +104,7 @@ export function ChatRoom({ roomId, currentUserId }: ChatRoomProps) {
             >
               <Link href={`/${msg.username}`}>
                 <Avatar className="h-8 w-8 border">
-                   <AvatarImage src={msg.avatarUrl} alt={msg.username} />
+                   <AvatarImage src={msg.avatarUrl} alt={msg.username} className="object-contain"/>
                   <AvatarFallback>
                     {msg.username?.charAt(0).toUpperCase() || '?'}
                   </AvatarFallback>

@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/lib/types';
 import { SKILLS_LIST, SOFT_SKILLS_LIST, CAREER_SKILLS } from '@/lib/constants';
-import { updateUserPreferences, uploadImage, deleteResume, getResumeUrl, getImageUrl, uploadResume } from '@/lib/api';
+import { updateUserPreferences, uploadImage, deleteResume, getResumeUrl, getAvatarUrl, uploadResume } from '@/lib/api';
 import { generateContribution } from '@/ai/flows/contribution-generation';
 import { Loader2, Wand2, FileText, Trash2, UploadCloud, Briefcase, Camera } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -72,6 +72,8 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const profilePicturesBucketId = process.env.NEXT_PUBLIC_APPWRITE_PROFILE_PICTURES_BUCKET_ID!;
+
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -127,12 +129,11 @@ export default function ProfileForm({ user, onProfileUpdate }: ProfileFormProps)
         };
 
         if (data.newAvatar) {
-            const bucketId = process.env.NEXT_PUBLIC_APPWRITE_PROFILE_PICTURES_BUCKET_ID;
-            if (!bucketId) {
+            if (!profilePicturesBucketId) {
                 throw new Error("Profile pictures bucket ID is not configured.");
             }
-            const uploadedFile = await uploadImage(data.newAvatar, bucketId);
-            updateData.avatarUrl = getImageUrl(uploadedFile.$id, bucketId);
+            const uploadedFile = await uploadImage(data.newAvatar, profilePicturesBucketId);
+            updateData.avatarUrl = getAvatarUrl(uploadedFile.$id, profilePicturesBucketId);
         }
         
         let resumeFileId = data.resumeFileId;

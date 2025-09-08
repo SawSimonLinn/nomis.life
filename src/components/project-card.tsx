@@ -64,7 +64,7 @@ export default function ProjectCard({ project, rank }: ProjectCardProps) {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-background">
-                  <AvatarImage src={project.user.avatarUrl} alt={project.user.name} className="object-cover" />
+                  <AvatarImage src={project.user.avatarUrl} alt={project.user.name} className="object-contain" />
                   <AvatarFallback>{project.user.name ? project.user.name.charAt(0) : 'U'}</AvatarFallback>
                 </Avatar>
                 <div>

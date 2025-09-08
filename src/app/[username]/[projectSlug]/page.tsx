@@ -239,7 +239,7 @@ export default function ProjectPage() {
                 <div className="flex items-center gap-4 mb-4">
                   <Link href={`/${creator.username}`}>
                     <Avatar className="h-16 w-16 border-2 border-primary">
-                      <AvatarImage src={creator.avatarUrl} alt={creator.name} className="object-cover" />
+                      <AvatarImage src={creator.avatarUrl} alt={creator.name} className="object-contain" />
                       <AvatarFallback>{creator.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Link>

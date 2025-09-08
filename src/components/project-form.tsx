@@ -17,7 +17,7 @@ import { suggestProjectTech } from '@/ai/flows/ai-tech-generation';
 import type { Project, User } from '@/lib/types';
 import { rewriteProjectDescription } from '@/ai/flows/project-description-generation';
 import { generateProjectDetails } from '@/ai/flows/project-details-generation';
-import { createProject, updateProject, uploadImage, deleteImage, getImageUrl, mapAppwriteUserToUser } from '@/lib/api';
+import { createProject, updateProject, uploadImage, deleteImage, getProjectImageUrl, mapAppwriteUserToUser } from '@/lib/api';
 import { Separator } from './ui/separator';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -93,7 +93,7 @@ export default function ProjectForm({ project, onSubmitSuccess, user }: ProjectF
             challenges: project.challenges || '',
             learnings: project.learnings || '',
         });
-        const previews = project.imageIds?.map(id => getImageUrl(id, projectImageBucketId)) || [];
+        const previews = project.imageIds?.map(id => getProjectImageUrl(id, projectImageBucketId)) || [];
         setImagePreviews(previews);
     } else {
         form.reset({

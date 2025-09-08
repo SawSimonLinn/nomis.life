@@ -229,7 +229,7 @@ async function getProjects(queries: string[] = []): Promise<{ projects: Project[
 
             if (project.imageIds && project.imageIds.length > 0) {
                 const projectImageBucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ID!;
-                project.imageUrls = project.imageIds.map(id => getImageUrl(id, projectImageBucketId));
+                project.imageUrls = project.imageIds.map(id => getProjectImageUrl(id, projectImageBucketId));
             } else {
                 project.imageUrls = ['https://placehold.co/1920x1080?text=Project+Image'];
             }
@@ -299,7 +299,7 @@ export async function getProjectBySlug(slug: string, username: string): Promise<
     
         if (project.imageIds && project.imageIds.length > 0) {
             const projectImageBucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ID!;
-            project.imageUrls = project.imageIds.map(id => getImageUrl(id, projectImageBucketId));
+            project.imageUrls = project.imageIds.map(id => getProjectImageUrl(id, projectImageBucketId));
         } else {
             project.imageUrls = ['https://placehold.co/1920x1080?text=Project+Image'];
         }
@@ -443,7 +443,7 @@ export async function deleteImage(fileId: string, bucketId: string) {
     }
 }
 
-export function getImageUrl(fileId: string, bucketId: string): string {
+export function getProjectImageUrl(fileId: string, bucketId: string): string {
     try {
         const url = storage.getFilePreview(bucketId, fileId, 1920, 1080).href;
         return url;
@@ -451,6 +451,16 @@ export function getImageUrl(fileId: string, bucketId: string): string {
         console.error('Failed to get image URL', error);
         // Return a placeholder if the URL can't be generated
         return `https://placehold.co/1920x1080?text=Error+Loading+Image`;
+    }
+}
+
+export function getAvatarUrl(fileId: string, bucketId: string): string {
+    try {
+        const url = storage.getFilePreview(bucketId, fileId, 400, 400).href;
+        return url;
+    } catch (error) {
+        console.error('Failed to get avatar URL', error);
+        return `https://placehold.co/400x400?text=Error`;
     }
 }
 
