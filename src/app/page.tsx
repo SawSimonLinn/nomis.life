@@ -1,18 +1,27 @@
+"use client";
 
-'use client';
-
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { getFeaturedProjects, getAllProjects, getProjectsWithReviewCounts } from '@/lib/api';
-import type { Project } from '@/lib/types';
-import ProjectCard from '@/components/project-card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
-import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
+import { Search, X, Loader2, Users, GitBranch, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { getAllProjects, getProjectsWithReviewCounts } from "@/lib/api";
+import { suggestProjectTech } from "@/ai/flows/ai-tag-generation";
+import type { Project } from "@/lib/types";
+import ProjectCard from "@/components/project-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Badge } from "@/components/ui/badge";
 
 const chatBubbles = [
   {
@@ -24,16 +33,21 @@ const chatBubbles = [
   {
     id: 2,
     text: "✅ Anyone up for code review?",
-    position: "bottom-60 right-12",
+    position: "md:bottom-60 bottom-32 right-12",
     duration: 3,
   },
   {
     id: 3,
     text: "Loved this project! 💕",
-    position: "bottom-40 md:left-60 left-20",
+    position: "md:bottom-40 md:left-60 bottom-20 left-20",
     duration: 5,
   },
-  { id: 4, text: "Clean UI 🔥", position: "top-60 left-80", duration: 4 },
+  {
+    id: 4,
+    text: "Clean UI 🔥",
+    position: "md:top-60 md:left-80 top-40 left-10",
+    duration: 4,
+  },
   {
     id: 5,
     text: "Let's connect! 🤝",
@@ -65,7 +79,7 @@ function TimedBubble({ id, text, position, duration, delay }: any) {
       clearTimeout(hideTimeout);
       clearInterval(interval);
     };
-  }, []);
+  }, [delay]);
 
   return (
     <AnimatePresence>
@@ -88,6 +102,68 @@ function TimedBubble({ id, text, position, duration, delay }: any) {
   );
 }
 
+function Stats() {
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    totalUsers: 0,
+    totalViews: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/stats");
+        const data = await response.json();
+        if (response.ok) {
+          setStats(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center gap-8 mt-8">
+        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-10 w-24" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-center items-center gap-4 sm:gap-8 mt-8 text-sm sm:text-base text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <Users className="w-5 h-5 text-primary" />
+        <span className="font-semibold text-foreground">
+          {stats.totalUsers.toLocaleString()}+
+        </span>
+        <span>Developers</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <GitBranch className="w-5 h-5 text-primary" />
+        <span className="font-semibold text-foreground">
+          {stats.totalProjects.toLocaleString()}+
+        </span>
+        <span>Projects</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Eye className="w-5 h-5 text-primary" />
+        <span className="font-semibold text-foreground">
+          {stats.totalViews.toLocaleString()}+
+        </span>
+        <span>Views</span>
+      </div>
+    </div>
+  );
+}
+
 function Hero() {
   const { theme } = useTheme();
 
@@ -106,9 +182,9 @@ function Hero() {
         />
 
         <motion.img
-          src="https://picsum.photos/seed/dev3/100/100"
+          src="https://avatars.githubusercontent.com/u/150866883?v=4"
           alt="dev1"
-          className="absolute bottom-40 right-10 w-12 h-12 rounded-full border-2 border-white dark:border-zinc-900 shadow-lg"
+          className="absolute md:bottom-40 bottom-14 right-10 w-12 h-12 rounded-full border-2 border-white dark:border-zinc-900 shadow-lg"
           data-ai-hint="avatar"
           initial={{ y: 0 }}
           animate={{ y: [0, -20, 0] }}
@@ -117,7 +193,7 @@ function Hero() {
         <motion.img
           src="https://picsum.photos/seed/dev4/100/100"
           alt="dev2"
-          className="absolute bottom-20 md:left-60 left-20 w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 shadow-lg"
+          className="absolute bottom-20 md:left-60 left-10 w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 shadow-lg"
           data-ai-hint="avatar"
           initial={{ y: 0 }}
           animate={{ y: [0, 25, 0] }}
@@ -142,10 +218,13 @@ function Hero() {
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 text-foreground">
           Build. Share. Connect.
         </h1>
-        <p className="text-lg md:text-xl text-muted-foreground mb-6">
-          Whether you're a software engineer, data scientist, UI/UX designer, QA
-          tester, or just exploring tech — showcase your work, get feedback, and
-          grow with a supportive community.
+        <p className="text-md md:text-xl text-muted-foreground mb-6">
+          <span className="hidden md:inline">
+            Whether you're a software engineer, data scientist, UI/UX designer,
+            QA tester, or just exploring tech —
+          </span>{" "}
+          Share your projects, get feedback, and grow with a supportive
+          community.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -161,98 +240,248 @@ function Hero() {
           </Link>
         </div>
 
-        <p className="text-sm text-muted-foreground mt-4">
-          This platform is for everyone in tech — no matter your role or
-          experience level.
-        </p>
+        <Stats />
       </motion.div>
     </section>
   );
 }
 
+const PROJECTS_PER_PAGE = 6;
+
+function ProjectPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  const handlePrevious = () => {
+    if (page > 1) onPageChange(page - 1);
+  };
+
+  const handleNext = () => {
+    if (page < totalPages) onPageChange(page + 1);
+  };
+
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            onClick={handlePrevious}
+            className={
+              page === 1 ? "pointer-events-none opacity-50" : undefined
+            }
+          />
+        </PaginationItem>
+        {pageNumbers.map((p) => (
+          <PaginationItem key={p}>
+            <PaginationLink
+              onClick={() => onPageChange(p)}
+              isActive={p === page}
+            >
+              {p}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+        <PaginationItem>
+          <PaginationNext
+            onClick={handleNext}
+            className={
+              page === totalPages ? "pointer-events-none opacity-50" : undefined
+            }
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
+  const [totalProjects, setTotalProjects] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [popularSearches, setPopularSearches] = useState<string[]>([
+    "AI Project",
+    "Portfolio Site",
+    "SaaS Platform",
+    "Mobile App",
+    "Data Analytics",
+    "Game Dev",
+  ]);
+
+  const totalPages = Math.ceil(totalProjects / PROJECTS_PER_PAGE);
+
+  const fetchProjects = async (page: number, query: string) => {
+    setIsSearching(true);
+    const response = await getAllProjects(query, page, PROJECTS_PER_PAGE);
+
+    const projectsWithReviews = await getProjectsWithReviewCounts(
+      response.projects
+    );
+    setProjects(projectsWithReviews);
+    setTotalProjects(response.total);
+
+    if (page === 1 && query === "") {
+      const projectTitles = response.projects.map((p) => p.title);
+      try {
+        const result = await suggestProjectTech({ projectTitles });
+        if (result.tech && result.tech.length > 0) {
+          setPopularSearches(result.tech);
+        }
+      } catch (error) {
+        console.warn("Could not fetch dynamic popular searches:", error);
+      }
+    }
+
+    setLoading(false);
+    setIsSearching(false);
+  };
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true);
-      let rawProjects;
-      if (searchQuery) {
-        rawProjects = await getAllProjects(searchQuery);
-      } else {
-        rawProjects = await getFeaturedProjects();
-      }
-      const projectsWithReviews = await getProjectsWithReviewCounts(rawProjects);
-      setProjects(projectsWithReviews);
-      setLoading(false);
-    };
-
     const handler = setTimeout(() => {
-        fetchProjects();
+      setCurrentPage(1); // Reset page on new search
+      fetchProjects(1, searchQuery);
     }, 300);
 
     return () => {
-        clearTimeout(handler);
+      clearTimeout(handler);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchProjects(currentPage, searchQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    const projectsElement = document.getElementById("projects");
+    if (projectsElement) {
+      projectsElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handlePopularSearch = (term: string) => {
+    setSearchQuery(term);
+  };
 
   return (
     <>
       <Hero />
-      <div id="projects" className="container mx-auto px-4 py-8 md:py-16">
-        <section className="mb-16">
-            <div className="relative max-w-2xl mx-auto">
+      <div
+        id="projects"
+        className="container mx-auto px-4 py-8 md:py-16 scroll-mt-20"
+      >
+        <section className="mb-12 text-center">
+          <h2 className="text-3xl font-bold font-headline mb-4">
+            Explore the Community
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+            Find projects by title, discover talented developers by name, or see
+            what's trending.
+          </p>
+          <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-                type="search"
-                placeholder="Search for developers or projects..."
-                className="pl-10 pr-10 text-base"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+              type="search"
+              placeholder="Search for projects or developers..."
+              className="pl-10 pr-10 text-base"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-             {searchQuery && (
+            {isSearching ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground animate-spin" />
+            ) : (
+              searchQuery && (
                 <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground hover:text-foreground"
-                    aria-label="Clear search"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
                 >
-                    <X />
+                  <X />
                 </button>
+              )
             )}
-            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+            <span className="text-sm text-muted-foreground">Popular:</span>
+            {popularSearches.map((term) => (
+              <Badge
+                key={term}
+                variant="secondary"
+                className="cursor-pointer hover:bg-primary/20"
+                onClick={() => handlePopularSearch(term)}
+              >
+                {term}
+              </Badge>
+            ))}
+          </div>
         </section>
 
         <section>
-            <h2 className="text-3xl font-bold font-headline mb-8 text-center">
-            {searchQuery ? `Search Results for "${searchQuery}"` : 'Featured Projects'}
-            </h2>
-            {loading ? (
+          <h2 className="text-3xl font-bold font-headline mb-8 text-center">
+            {searchQuery
+              ? `Search Results for "${searchQuery}"`
+              : "All Projects"}
+          </h2>
+          {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[...Array(3)].map((_, i) => (
-                    <Card key={i}>
-                        <Skeleton className="h-48 w-full" />
-                        <CardContent className="p-4">
-                            <Skeleton className="h-6 w-3/4 mb-2" />
-                            <Skeleton className="h-4 w-1/2 mb-4" />
-                            <Skeleton className="h-12 w-full" />
-                        </CardContent>
-                    </Card>
-                ))}
+              {[...Array(6)].map((_, i) => (
+                <Card key={i}>
+                  <Skeleton className="h-48 w-full" />
+                  <CardContent className="p-4">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2 mb-4" />
+                    <Skeleton className="h-12 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            ) : projects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {projects.map((project: Project) => (
-                <ProjectCard key={project.$id} project={project} />
+          ) : projects.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {projects.map((project: Project, index: number) => (
+                  <ProjectCard
+                    key={project.$id}
+                    project={project}
+                    rank={
+                      searchQuery
+                        ? undefined
+                        : index + 1 + (currentPage - 1) * PROJECTS_PER_PAGE
+                    }
+                  />
                 ))}
-            </div>
-            ) : (
+              </div>
+              <div className="mt-12 text-center">
+                <ProjectPagination
+                  page={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </>
+          ) : (
             <div className="text-center text-muted-foreground py-16">
-                <h3 className="text-2xl font-semibold mb-2">No Projects Found</h3>
-                <p>Try a different search term or check out all projects.</p>
+              <h3 className="text-2xl font-semibold mb-2">No Projects Found</h3>
+              <p>Try a different search term or check back later.</p>
             </div>
-            )}
+          )}
         </section>
       </div>
     </>
