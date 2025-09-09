@@ -215,7 +215,7 @@ function Hero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
       >
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 text-foreground">
+        <h1 className="text-3xl md:text-6xl font-bold tracking-tight mb-4 text-foreground">
           Build. Share. Connect.
         </h1>
         <p className="text-md md:text-xl text-muted-foreground mb-6">
