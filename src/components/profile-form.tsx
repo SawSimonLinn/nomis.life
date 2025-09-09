@@ -180,10 +180,7 @@ export default function ProfileForm({
           data.newAvatar,
           profilePicturesBucketId
         );
-        updateData.avatarUrl = getAvatarUrl(
-          uploadedFile.$id,
-          profilePicturesBucketId
-        );
+        updateData.avatarUrl = getAvatarUrl(uploadedFile.$id);
       }
 
       let resumeFileId = data.resumeFileId;
@@ -301,7 +298,7 @@ export default function ProfileForm({
         />
 
         <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
+          <CardHeader className="flex flex-col md:flex-row justify-between md:items-center">
             <div>
               <CardTitle>Public Profile</CardTitle>
               <CardDescription>
@@ -309,7 +306,11 @@ export default function ProfileForm({
                 page.
               </CardDescription>
             </div>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="mt-4 md:mt-0"
+            >
               {form.formState.isSubmitting && (
                 <Loader2 className="animate-spin mr-2" />
               )}
@@ -317,7 +318,7 @@ export default function ProfileForm({
             </Button>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               <FormField
                 control={form.control}
                 name="newAvatar"
@@ -356,7 +357,7 @@ export default function ProfileForm({
                 control={form.control}
                 name="bio"
                 render={({ field }) => (
-                  <FormItem className="flex-1">
+                  <FormItem className="flex-1 w-full">
                     <FormLabel>Your Bio</FormLabel>
                     <FormControl>
                       <Textarea
