@@ -1,8 +1,8 @@
-import Link from 'next/link';
-import { UserNav } from '@/components/auth/user-nav';
-import { ModeToggle } from '@/components/mode-toggle';
-import Notifications from './notifications';
-import Image from 'next/image';
+import Link from "next/link";
+import { UserNav } from "@/components/auth/user-nav";
+import { ModeToggle } from "@/components/mode-toggle";
+import Notifications from "./notifications";
+import Image from "next/image";
 
 export default function Header() {
   return (
@@ -18,10 +18,7 @@ export default function Header() {
               className="h-6 w-6"
               data-ai-hint="logo"
             />
-            <span className="font-bold sm:inline-block">
-              <span className="inline-block transform scale-x-[-1]">N</span>
-              omis.Life
-            </span>
+            <span className="font-bold sm:inline-block">Иоміs.Lіfe</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">

@@ -129,16 +129,16 @@ function Stats() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center gap-8 mt-8">
-        <Skeleton className="h-10 w-24" />
-        <Skeleton className="h-10 w-24" />
-        <Skeleton className="h-10 w-24" />
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-8 mt-8">
+        <Skeleton className="h-10 w-32" />
+        <Skeleton className="h-10 w-32" />
+        <Skeleton className="h-10 w-32" />
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center items-center gap-4 sm:gap-8 mt-8 text-sm sm:text-base text-muted-foreground">
+    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mt-8 text-sm sm:text-base text-muted-foreground">
       <div className="flex items-center gap-2">
         <Users className="w-5 h-5 text-primary" />
         <span className="font-semibold text-foreground">
@@ -233,8 +233,13 @@ function Hero() {
               Explore Projects
             </Button>
           </Link>
+          {/* hide "Join the Community" in mobile */}
           <Link href="/community-chat">
-            <Button size="lg" variant="outline" className="text-base px-6 py-3">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-base px-6 py-3 hidden md:inline-flex"
+            >
               Join the Community
             </Button>
           </Link>
